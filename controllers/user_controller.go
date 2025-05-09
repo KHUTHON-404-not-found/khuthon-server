@@ -180,7 +180,7 @@ func Login(c *gin.Context) {
 	// JWT 토큰 생성
 	atPrivateKey := os.Getenv("ACCESS_TOKEN_PRIVATE_KEY")
 	rtPrivateKey := os.Getenv("REFRESH_TOKEN_PRIVATE_KEY")
-	accessTTL := 15 * time.Minute
+	accessTTL := 60 * time.Minute
 	refreshTTL := 7 * 24 * time.Hour
 	accessToken, err := utils.CreateToken(accessTTL, user.UserID, atPrivateKey)
 	if err != nil {
