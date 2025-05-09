@@ -120,7 +120,7 @@ func GetTodosByDate(c *gin.Context) {
 	// 날짜 범위로 검색 (하루)
 	nextDay := date.AddDate(0, 0, 1)
 
-	if err := config.DB.Where("date >= ? AND date < ?", date, nextDay).Find(&todos).Error; err != nil {
+	if err := config.DB.Where("date < ? AND complete = ?", nextDay, false).Find(&todos).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
