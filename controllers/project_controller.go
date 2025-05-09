@@ -27,7 +27,7 @@ func CreateProject(c *gin.Context) {
 		return
 	}
 
-	Init_todo(c, project.Plant)
+	Init_todo(c, project.Plant, project.ProjectID)
 
 	c.JSON(http.StatusCreated, project)
 }
