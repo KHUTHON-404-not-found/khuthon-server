@@ -49,7 +49,6 @@ func SetupRoutes(router *gin.Engine) {
 				projects.GET("/:id", controllers.GetProject)
 				projects.PUT("/:id", controllers.UpdateProject)
 				projects.DELETE("/:id", controllers.DeleteProject)
-				projects.GET("/todo/:todo_id", controllers.GetProjectsByTodo)
 			}
 
 			// 할일 관련 라우트
@@ -62,6 +61,7 @@ func SetupRoutes(router *gin.Engine) {
 				todos.DELETE("/:id", controllers.DeleteTodo)
 				todos.GET("/date", controllers.GetTodosByDate)
 				todos.PUT("/:id/complete", controllers.CompleteTodo)
+				todos.GET("/project/:project_id", controllers.GetTodosByProject)
 			}
 
 			// 일기 관련 라우트

@@ -8,7 +8,6 @@ import (
 type Project struct {
 	ProjectID int       `json:"project_id" gorm:"column:projectID;primaryKey;autoIncrement"`
 	Plant     string    `json:"plant" gorm:"column:plant"`
-	TodoID    int       `json:"todo_id" gorm:"column:todoID"`
 	CreatedAt time.Time `json:"created_at" gorm:"column:created_at"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"column:updated_at"`
 }

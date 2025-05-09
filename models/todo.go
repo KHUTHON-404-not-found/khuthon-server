@@ -10,6 +10,7 @@ type Todo struct {
 	Date      time.Time `json:"date" gorm:"column:date"`
 	Content   string    `json:"content" gorm:"column:content"`
 	Complete  bool      `json:"complete" gorm:"column:complete"`
+	ProjectID int       `json:"project_id" gorm:"column:projectID"`
 	CreatedAt time.Time `json:"created_at" gorm:"column:created_at"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"column:updated_at"`
 }

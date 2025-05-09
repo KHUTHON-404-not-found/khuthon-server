@@ -27,6 +27,8 @@ func CreateProject(c *gin.Context) {
 		return
 	}
 
+	Init_todo(c, project.Plant)
+
 	c.JSON(http.StatusCreated, project)
 }
 
@@ -98,19 +100,6 @@ func GetAllProjects(c *gin.Context) {
 	var projects []models.Project
 
 	if err := config.DB.Find(&projects).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, projects)
-}
-
-// GetProjectsByTodo Todo 아이디로 프로젝트 조회
-func GetProjectsByTodo(c *gin.Context) {
-	todoID := c.Param("todo_id")
-	var projects []models.Project
-
-	if err := config.DB.Where("todoID = ?", todoID).Find(&projects).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

@@ -150,3 +150,16 @@ func CompleteTodo(c *gin.Context) {
 
 	c.JSON(http.StatusOK, todo)
 }
+
+// GetTodosByProject Todo 아이디로 투두 조회
+func GetTodosByProject(c *gin.Context) {
+	projectID := c.Param("project_id")
+	var todos []models.Todo
+
+	if err := config.DB.Where("projectID = ?", projectID).Find(&todos).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, todos)
+}
