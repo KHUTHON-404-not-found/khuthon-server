@@ -77,6 +77,12 @@ func SetupRoutes(router *gin.Engine) {
 				//diaries.POST("/:id/photo", controllers.UploadDiaryPhoto)
 				diaries.PATCH("/:id/photo-url", controllers.UpdateDiaryPhotoURL)
 			}
+
+			mission := protected.Group("/mission")
+			{
+				mission.POST("/check", controllers.TransferToMissionCheck)
+			}
+
 		}
 	}
 }
