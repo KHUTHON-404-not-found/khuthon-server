@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/KHUTHON-404-not-found/khuthon-server/config"
 	"github.com/KHUTHON-404-not-found/khuthon-server/models"
+	"github.com/KHUTHON-404-not-found/khuthon-server/utils"
 )
 
 // CreateUser 새 사용자 생성
@@ -20,12 +22,12 @@ func CreateUser(c *gin.Context) {
 	}
 
 	// 비밀번호 해시화
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
-		return
-	}
-	user.Password = string(hashedPassword)
+	//hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	//if err != nil {
+	//	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+	//	return
+	//}
+	//user.Password = string(hashedPassword)
 
 	// 생성 시간 설정
 	user.CreatedAt = time.Now()
@@ -170,14 +172,32 @@ func Login(c *gin.Context) {
 	}
 
 	// 비밀번호 검증
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
+	if err := utils.VerifyPassword(user.Password, input.Password, c); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
 
+	// JWT 토큰 생성
+	atPrivateKey := os.Getenv("ACCESS_TOKEN_PRIVATE_KEY")
+	rtPrivateKey := os.Getenv("REFRESH_TOKEN_PRIVATE_KEY")
+	accessTTL := 15 * time.Minute
+	refreshTTL := 7 * 24 * time.Hour
+	accessToken, err := utils.CreateToken(accessTTL, user.UserID, atPrivateKey)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create access token: " + err.Error()})
+		return
+	}
+	refreshToken, err := utils.CreateToken(refreshTTL, user.UserID, rtPrivateKey)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create refresh token"})
+		return
+	}
+	// 쿠키 설정
+	c.SetCookie("access_token", accessToken, int(accessTTL.Seconds()), "/", "", false, true)
+
 	// 성공 응답
 	user.Password = ""
-	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "user": user})
+	c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken, "user": user})
 }
 
 // GetAllUsers 모든 사용자 조회 (관리자용)

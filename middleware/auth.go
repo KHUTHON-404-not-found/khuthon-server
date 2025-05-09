@@ -1,101 +1,51 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 	"strings"
-	"time"
-
-	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v4"
 
 	"github.com/KHUTHON-404-not-found/khuthon-server/config"
 	"github.com/KHUTHON-404-not-found/khuthon-server/models"
+	"github.com/KHUTHON-404-not-found/khuthon-server/utils"
+	"github.com/gin-gonic/gin"
 )
 
-// JWTAuth JWT 인증 미들웨어
 func JWTAuth() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
-			c.Abort()
+	return func(ctx *gin.Context) {
+		var access_token string
+		cookie, err := ctx.Cookie("access_token")
+
+		authorizationHeader := ctx.Request.Header.Get("Authorization")
+		fields := strings.Fields(authorizationHeader)
+
+		if len(fields) != 0 && fields[0] == "Bearer" {
+			access_token = fields[1]
+		} else if err == nil {
+			access_token = cookie
+		}
+
+		if access_token == "" {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "You are not logged in"})
+			return
+		}
+		acPublicKey := os.Getenv("ACCESS_TOKEN_PUBLIC_KEY")
+
+		sub, err := utils.ValidateToken(access_token, acPublicKey)
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": err.Error()})
 			return
 		}
 
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header format must be Bearer {token}"})
-			c.Abort()
+		var user models.User
+		result := config.DB.First(&user, "id = ?", fmt.Sprint(sub))
+		if result.Error != nil {
+			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": "the user belonging to this token no logger exists"})
 			return
 		}
 
-		tokenString := parts[1]
-		claims := &jwt.StandardClaims{}
-
-		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-			// 실제 구현에서는 환경 변수나 설정 파일에서 시크릿 키를 가져와야 함
-			return []byte("your_jwt_secret_key"), nil
-		})
-
-		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
-			c.Abort()
-			return
-		}
-
-		// 사용자 ID를 컨텍스트에 저장
-		c.Set("userID", claims.Subject)
-		c.Next()
+		ctx.Set("currentUser", user)
+		ctx.Next()
 	}
-}
-
-// GenerateToken JWT 토큰 생성
-func GenerateToken(userID string) (string, error) {
-	claims := jwt.StandardClaims{
-		Subject:   userID,
-		ExpiresAt: time.Now().Add(time.Hour * 72).Unix(), // 토큰 유효 기간 3일
-		IssuedAt:  time.Now().Unix(),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	// 실제 구현에서는 환경 변수나 설정 파일에서 시크릿 키를 가져와야 함
-	return token.SignedString([]byte("your_jwt_secret_key"))
-}
-
-// LoginHandler 로그인 후 JWT 토큰 발급
-func LoginHandler(c *gin.Context) {
-	var input struct {
-		Email    string `json:"email" binding:"required"`
-		Password string `json:"password" binding:"required"`
-	}
-
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	var user models.User
-	if err := config.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
-		return
-	}
-
-	// 비밀번호 검증 (실제 구현시 bcrypt 등으로 해시 비교 필요)
-	// bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password))
-
-	// JWT 토큰 생성
-	token, err := GenerateToken(string(user.UserID))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"token": token,
-		"user": gin.H{
-			"id":    user.UserID,
-			"email": user.Email,
-		},
-	})
 }
