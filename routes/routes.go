@@ -74,7 +74,8 @@ func SetupRoutes(router *gin.Engine) {
 				diaries.DELETE("/:id", controllers.DeleteDiary)
 				diaries.GET("/project/:project_id", controllers.GetDiariesByProject)
 				diaries.GET("/date", controllers.GetDiariesByDate)
-				diaries.POST("/:id/photo", controllers.UploadDiaryPhoto)
+				//diaries.POST("/:id/photo", controllers.UploadDiaryPhoto)
+				diaries.PATCH("/:id/photo-url", controllers.UpdateDiaryPhotoURL)
 			}
 		}
 	}
