@@ -95,6 +95,27 @@ func DeleteProject(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Project deleted successfully"})
 }
 
+// GetProjectsByUser 프로젝트 아이디로 사용자 조회
+func GetProjectsByUser(c *gin.Context) {
+	userID := c.Param("user_id")
+	var projects []models.Project
+
+	if err := config.DB.Where("userID = ?", userID).Find(&projects).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(projects) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No users found for this project"})
+		return
+	}
+	var projectIDs []int
+	for _, project := range projects {
+		projectIDs = append(projectIDs, project.ProjectID)
+	}
+	c.JSON(http.StatusOK, projectIDs)
+}
+
 // GetAllProjects 모든 프로젝트 조회
 func GetAllProjects(c *gin.Context) {
 	var projects []models.Project

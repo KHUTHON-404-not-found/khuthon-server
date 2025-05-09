@@ -135,24 +135,6 @@ func GetUserByEmail(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-// GetUsersByProject 프로젝트 아이디로 사용자 조회
-func GetUsersByProject(c *gin.Context) {
-	projectID := c.Param("project_id")
-	var users []models.User
-
-	if err := config.DB.Where("projectID = ?", projectID).Find(&users).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	// 비밀번호 필드 제외
-	for i := range users {
-		users[i].Password = ""
-	}
-
-	c.JSON(http.StatusOK, users)
-}
-
 // Login 사용자 로그인
 func Login(c *gin.Context) {
 	var input struct {

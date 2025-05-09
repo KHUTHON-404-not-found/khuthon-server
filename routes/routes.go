@@ -38,7 +38,6 @@ func SetupRoutes(router *gin.Engine) {
 				users.PUT("/:id", controllers.UpdateUser)
 				users.DELETE("/:id", controllers.DeleteUser)
 				users.GET("/email", controllers.GetUserByEmail)
-				users.GET("/project/:project_id", controllers.GetUsersByProject)
 			}
 
 			// 프로젝트 관련 라우트
@@ -48,6 +47,7 @@ func SetupRoutes(router *gin.Engine) {
 				projects.GET("/", controllers.GetAllProjects)
 				projects.GET("/:id", controllers.GetProject)
 				projects.PUT("/:id", controllers.UpdateProject)
+				users.GET("/users/:user_id", controllers.GetProjectsByUser)
 				projects.DELETE("/:id", controllers.DeleteProject)
 			}
 

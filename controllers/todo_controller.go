@@ -161,5 +161,11 @@ func GetTodosByProject(c *gin.Context) {
 		return
 	}
 
+	// 프로젝트에 속한 할일 조회
+	if len(todos) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No todos found for this project"})
+		return
+	}
+
 	c.JSON(http.StatusOK, todos)
 }
