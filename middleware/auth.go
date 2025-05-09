@@ -39,7 +39,7 @@ func JWTAuth() gin.HandlerFunc {
 		}
 
 		var user models.User
-		result := config.DB.First(&user, "id = ?", fmt.Sprint(sub))
+		result := config.DB.First(&user, "userID = ?", fmt.Sprint(sub))
 		if result.Error != nil {
 			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": "the user belonging to this token no logger exists"})
 			return
