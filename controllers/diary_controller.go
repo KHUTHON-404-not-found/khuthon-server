@@ -142,35 +142,27 @@ func GetDiariesByDate(c *gin.Context) {
 }
 
 // UploadDiaryPhoto 일기 사진 업로드 (실제 구현시 파일 업로드 처리 필요)
-func UploadDiaryPhoto(c *gin.Context) {
+func UpdateDiaryPhotoURL(c *gin.Context) {
 	id := c.Param("id")
 	var diary models.Diary
 
-	// 일기 존재 확인
+	// 기존 일기 조회
 	if err := config.DB.Where("diaryID = ?", id).First(&diary).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Diary not found"})
 		return
 	}
 
-	// 파일 업로드 처리 (실제 구현 필요)
-	file, err := c.FormFile("photo")
-	if err != nil {
+	// photo_url만 받기
+	var input struct {
+		PhotoURL string `json:"photo_url"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// 파일 저장 경로 생성 (실제 구현 필요)
-	filename := time.Now().Format("20060102150405") + "_" + file.Filename
-	photoURL := "/uploads/" + filename
-
-	// 파일 저장 (실제 구현 필요)
-	if err := c.SaveUploadedFile(file, "./uploads/"+filename); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	// 일기 정보 업데이트
-	diary.PhotoURL = photoURL
+	// 업데이트
+	diary.PhotoURL = input.PhotoURL
 	diary.UpdatedAt = time.Now()
 
 	if err := config.DB.Save(&diary).Error; err != nil {
